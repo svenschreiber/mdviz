@@ -10,11 +10,13 @@
 #include "string.h"
 #include "math.h"
 #include "input.h"
+#include "time.h"
 #include "state.h"
 
 #include "string.c"
 #include "math.c"
 #include "input.c"
+#include "time.c"
 
 String read_file(char *path) {
     String result = {0};
@@ -83,6 +85,7 @@ int main(int argc, char** argv) {
         return -1;
     }
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
 
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0) {
@@ -97,14 +100,23 @@ int main(int argc, char** argv) {
     Sim_Step step = parse_sim_step(csv);
     free(csv.data);
 
+    set_max_fps(60);
+
+    update_time();
+
     while (!glfwWindowShouldClose(window)) {
-        process_inputs(window);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glfwSwapBuffers(window);
+        update_time();
 
         glfwPollEvents();
+        process_inputs(window);
+
+        if (should_redraw()) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glfwSwapBuffers(window);
+            reset_frame_time();
+        }
+
     }
 
     glfwTerminate();

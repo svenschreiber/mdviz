@@ -15,6 +15,14 @@ typedef struct State {
             b32 prev_button_state[GLFW_MOUSE_BUTTON_LAST];
         } mouse;
     } input;
+    struct {
+        f32 current;
+        f32 prev;
+        f32 delta;
+        f32 max_fps;
+        f32 min_frame_time;
+        f32 frame_dt;
+    } time;
 } State;
 
 State state = {0};
