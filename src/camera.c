@@ -58,7 +58,7 @@ void move_cam(Camera *cam) {
     }
 
     f32 wheel_y = state.input.mouse.wheel.y;
-    f32 zoom_speed = 10.0f * delta;
+    f32 zoom_speed = 20.0f * delta;
     cam->pos = v3_add(cam->pos, v3_mul_f32(cam->front, wheel_y * zoom_speed));
 
     f32 move_speed = 50.0f * delta;
