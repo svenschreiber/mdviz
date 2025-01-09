@@ -1,3 +1,11 @@
+vec2 v2_add(vec2 lhs, vec2 rhs) {
+    return vec2(lhs.x + rhs.x, lhs.y + rhs.y);
+}
+
+vec2 v2_sub(vec2 lhs, vec2 rhs) {
+    return vec2(lhs.x - rhs.x, lhs.y - rhs.y);
+}
+
 vec3 v3_add(vec3 lhs, vec3 rhs) {
     return vec3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
 }

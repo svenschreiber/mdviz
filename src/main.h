@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define u8 uint8_t
 #define u32 uint32_t

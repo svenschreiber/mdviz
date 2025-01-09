@@ -9,26 +9,12 @@
 #include "main.h"
 #include "string.h"
 #include "math.h"
+#include "input.h"
+#include "state.h"
 
 #include "string.c"
 #include "math.c"
-
-typedef struct State {
-    struct {
-        struct {
-            b32 key_state[GLFW_KEY_LAST];
-            b32 prev_key_state[GLFW_KEY_LAST];
-        } keyboard;
-        struct {
-            vec2 pos;
-            vec2 prev_pos;
-            vec2 wheel;
-            vec2 prev_wheel;
-        } mouse;
-    } input;
-} State;
-
-State state = {0};
+#include "input.c"
 
 String read_file(char *path) {
     String result = {0};
@@ -105,11 +91,15 @@ int main(int argc, char** argv) {
     }
     printf("[GLAD] Loaded OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
+    register_window_callbacks(window);
+
     String csv = read_file("res/mdsimulation/collision.0.csv");
     Sim_Step step = parse_sim_step(csv);
     free(csv.data);
 
     while (!glfwWindowShouldClose(window)) {
+        process_inputs(window);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glfwSwapBuffers(window);

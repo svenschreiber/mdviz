@@ -149,6 +149,9 @@ typedef union quat {
 // | INTERFACE |
 // +===========+
 
+vec2 v2_add(vec2 lhs, vec2 rhs);
+vec2 v2_sub(vec2 lhs, vec2 rhs);
+
 vec3 v3_add(vec3 lhs, vec3 rhs);
 vec3 v3_sub(vec3 lhs, vec3 rhs);
 vec3 v3_mul_f32(vec3 v, f32 f);
