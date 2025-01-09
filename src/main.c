@@ -8,27 +8,19 @@
 
 #include "main.h"
 #include "string.h"
+#include "util.h"
 #include "math.h"
 #include "input.h"
 #include "time.h"
 #include "state.h"
+#include "shader.h"
 
 #include "string.c"
+#include "util.c"
 #include "math.c"
 #include "input.c"
 #include "time.c"
-
-String read_file(char *path) {
-    String result = {0};
-    FILE *f = fopen(path, "rb");
-    fseek(f, 0, SEEK_END);
-    result.size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    result.data = malloc(result.size);
-    fread(result.data, result.size, 1, f);
-    fclose(f);
-    return result;
-}
+#include "shader.c"
 
 typedef struct Particle {
     f32 x;
@@ -45,7 +37,7 @@ typedef struct Sim_Step {
 Sim_Step parse_sim_step(String csv) {
     String *lines = str_split(str_trim(csv), Str("\n"));
     Sim_Step step = {
-        .particles = malloc(arrlen(lines) * sizeof(Particle)),
+        .particles = ALLOC(Particle, arrlen(lines)),
         .count = arrlen(lines)
     };
 
@@ -96,13 +88,14 @@ int main(int argc, char** argv) {
 
     register_window_callbacks(window);
 
-    String csv = read_file("res/mdsimulation/collision.0.csv");
+    String csv = read_entire_file("res/mdsimulation/collision.0.csv");
     Sim_Step step = parse_sim_step(csv);
     free(csv.data);
 
-    set_max_fps(60);
+    GLuint program = load_shader_program("res/shader/points.vs", "res/shader/points.fs");
 
-    update_time();
+    set_max_fps(60);
+    update_time(); // to initialize time
 
     while (!glfwWindowShouldClose(window)) {
         update_time();

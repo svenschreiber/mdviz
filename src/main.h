@@ -15,4 +15,7 @@
 #define f32 float
 #define f64 double
 
+#define ALLOC(type, count) ((type *)malloc(sizeof(type) * count))
+#define ALLOC_ZERO(type, count) ((type *)calloc(count, sizeof(type)))
+
 #endif // MAIN_H
