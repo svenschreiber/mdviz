@@ -21,13 +21,6 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
-void register_window_callbacks(GLFWwindow* window) {
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-}
-
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     state.input.mouse.wheel = vec2(xoffset, yoffset);
 }

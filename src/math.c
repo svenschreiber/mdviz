@@ -6,6 +6,10 @@ vec2 v2_sub(vec2 lhs, vec2 rhs) {
     return vec2(lhs.x - rhs.x, lhs.y - rhs.y);
 }
 
+vec2 v2_mul_f32(vec2 v, f32 f) {
+    return vec2(v.x * f, v.y * f);
+}
+
 vec3 v3_add(vec3 lhs, vec3 rhs) {
     return vec3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
 }
@@ -39,6 +43,16 @@ vec3 v3_cross(vec3 lhs, vec3 rhs) {
     };
 }
 
+mat3 m3_ident() {
+    return (mat3) {
+        {
+            {1.0f, 0.0f, 0.0f},
+            {0.0f, 1.0f, 0.0f},
+            {0.0f, 0.0f, 1.0f}
+        }
+    };
+}
+
 mat3 m3_transpose(mat3 m) {
     mat3 result;
     for (s32 i = 0; i < 3; ++i) {
@@ -47,6 +61,32 @@ mat3 m3_transpose(mat3 m) {
         result.cols[i].z = m.data[2][i];
     }
 
+    return result;
+}
+
+mat3 m3_rotate(mat3 m, vec3 axis, f32 theta) {
+    m.data[0][0] = cosf(theta) + axis.x * axis.x * (1.0f - cosf(theta));
+    m.data[1][0] = axis.x * axis.y * (1.0f - cosf(theta)) - axis.z * sinf(theta);
+    m.data[2][0] = axis.x * axis.z * (1.0f - cosf(theta)) + axis.y * sinf(theta);
+
+    m.data[0][1] = axis.y * axis.x * (1.0f - cosf(theta)) + axis.z * sinf(theta);
+    m.data[1][1] = cosf(theta) + axis.y * axis.y * (1.0f - cosf(theta));
+    m.data[2][1] = axis.y * axis.z * (1.0f - cosf(theta)) - axis.x * sinf(theta);
+
+    m.data[0][2] = axis.z * axis.x * (1.0f - cosf(theta)) - axis.y * sinf(theta);
+    m.data[1][2] = axis.z * axis.y * (1.0f - cosf(theta)) + axis.x * sinf(theta);
+    m.data[2][2] = cosf(theta) + axis.z * axis.z * (1.0f - cosf(theta));
+    
+    return m;
+}
+
+vec3 m3_mul_v3(mat3 m, vec3 v) {
+    vec3 result;
+    for (s32 y = 0; y < 3; ++y) {
+        result.data[y] = (m.data[0][y] * v.data[0] +
+                          m.data[1][y] * v.data[1] +
+                          m.data[2][y] * v.data[2]);
+    }
     return result;
 }
 

@@ -151,6 +151,7 @@ typedef union quat {
 
 vec2 v2_add(vec2 lhs, vec2 rhs);
 vec2 v2_sub(vec2 lhs, vec2 rhs);
+vec2 v2_mul_f32(vec2 v, f32 f);
 
 vec3 v3_add(vec3 lhs, vec3 rhs);
 vec3 v3_sub(vec3 lhs, vec3 rhs);
@@ -166,7 +167,10 @@ vec4 v4_mul_f32(vec4 v, f32 f);
 f32 v4_dot(vec4 lhs, vec4 rhs);
 f32 v4_len(vec4 v);
 
+mat3 m3_ident();
 mat3 m3_transpose(mat3 m);
+mat3 m3_rotate(mat3 m, vec3 axis, f32 theta);
+vec3 m3_mul_v3(mat3 m, vec3 v);
 
 mat4 m4_ident();
 mat4 m4_mul(mat4 lhs, mat4 rhs);

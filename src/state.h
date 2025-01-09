@@ -23,6 +23,9 @@ typedef struct State {
         f32 min_frame_time;
         f32 frame_dt;
     } time;
+    struct {
+        ivec2 render;
+    } window;
 } State;
 
 State state = {0};
