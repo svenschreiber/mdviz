@@ -14,5 +14,6 @@ b32 is_mouse_button_down(int button);
 b32 is_mouse_button_held(int button);
 
 void process_inputs(GLFWwindow *window);
+void reset_inputs();
 
 #endif // INPUT_H

@@ -1,5 +1,4 @@
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    state.input.keyboard.prev_key_state[key] = state.input.keyboard.key_state[key];
     if (action == GLFW_PRESS) {
         state.input.keyboard.key_state[key] = true;
     } else if (action == GLFW_RELEASE) {
@@ -8,12 +7,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
-    state.input.mouse.prev_pos = state.input.mouse.pos;
     state.input.mouse.pos = vec2(xpos, ypos);
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
-    state.input.mouse.prev_button_state[button] = state.input.mouse.button_state[button];
     if (action == GLFW_PRESS) {
         state.input.mouse.button_state[button] = true;
     } else if (action == GLFW_RELEASE) {
@@ -23,6 +20,14 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     state.input.mouse.wheel = vec2(xoffset, yoffset);
+}
+
+void reset_inputs() {
+    for (s32 key = 0; key < GLFW_KEY_LAST; ++key) state.input.keyboard.prev_key_state[key] = state.input.keyboard.key_state[key];
+    for (s32 button = 0; button < GLFW_MOUSE_BUTTON_LAST; ++button) state.input.mouse.prev_button_state[button] = state.input.mouse.button_state[button];
+    state.input.mouse.prev_pos = state.input.mouse.pos;
+    state.input.mouse.prev_wheel = state.input.mouse.wheel;
+    state.input.mouse.wheel = vec2(0, 0);
 }
 
 vec2 get_mouse_pos() {

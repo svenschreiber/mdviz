@@ -128,8 +128,10 @@ b32 str_read_line(String *str, String *result) {
     while (line_size < str->size && str->data[line_size] != '\n') {
         ++line_size;
     }
-    result->data = str->data;
-    result->size = line_size;
+    if (result) {
+        result->data = str->data;
+        result->size = line_size;
+    }
     
     // advance original string
     if (line_size < str->size - 1) {

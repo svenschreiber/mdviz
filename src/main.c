@@ -36,15 +36,29 @@ typedef struct Sim_Step {
     u32 count;
 } Sim_Step;
 
+vec2 get_velocity_bounds(Sim_Step step) {
+    f32 min_v = FLT_MAX;
+    f32 max_v = -FLT_MAX;
+    for (u32 i = 0; i < step.count; ++i) {
+        f32 v = step.particles[i].v;
+        if (v < min_v) min_v = v;
+        if (v > max_v) max_v = v;
+    }
+    return vec2(min_v, max_v);
+}
+
 Sim_Step parse_sim_step(String csv) {
-    String *lines = str_split(str_trim(csv), Str("\n"));
+    // preprocessing
+    csv = str_trim(csv);
+    str_read_line(&csv, NULL);
+    
+    String *lines = str_split(csv, Str("\n"));
     Sim_Step step = {
         .particles = ALLOC(Particle, arrlen(lines)),
         .count = arrlen(lines)
     };
 
-    // Starting at i=1, because first line has column names
-    for (u32 i = 1; i < arrlen(lines); ++i) {
+    for (u32 i = 0; i < arrlen(lines); ++i) {
         String line = lines[i];
         String *values = str_split(line, Str(","));
         assert(arrlen(values) == 4);
@@ -106,7 +120,9 @@ int main(int argc, char** argv) {
     String csv = read_entire_file("res/mdsimulation/collision.10.csv");
     Sim_Step step = parse_sim_step(csv);
     free(csv.data);
+    vec2 step_vel_bounds = get_velocity_bounds(step);
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
     GLuint shader = load_shader_program("res/shader/points.vs", "res/shader/points.fs");
 
     GLuint point_vao;
@@ -116,10 +132,6 @@ int main(int argc, char** argv) {
     glGenBuffers(1, &point_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
     glBufferData(GL_ARRAY_BUFFER, step.count * sizeof(Particle), step.particles, GL_STATIC_DRAW);
-    // f32 point_data[] = {
-    //     0.0f, 0.0f, 0.0f, 1.0f,
-    // };
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(point_data), point_data, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (GLvoid *)0);
     glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (GLvoid *)(3 * sizeof(f32)));
 
@@ -147,6 +159,8 @@ int main(int argc, char** argv) {
             shader_use(shader);
             mat4 view_matrix = camera_get_view_matrix(&cam);
             shader_set_mat4(shader, "view", view_matrix);
+            shader_set_vec3(shader, "cam_pos", cam.pos);
+            shader_set_vec2(shader, "vel_bounds", step_vel_bounds);
 
             glBindVertexArray(point_vao);
             glEnableVertexAttribArray(0);
@@ -155,7 +169,7 @@ int main(int argc, char** argv) {
 
             glfwSwapBuffers(window);
             reset_frame_time();
-            state.input.mouse.wheel = vec2(0);
+            reset_inputs();
         }
 
     }

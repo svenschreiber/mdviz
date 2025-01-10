@@ -11,6 +11,7 @@ typedef struct State {
             vec2 pos;
             vec2 prev_pos;
             vec2 wheel;
+            vec2 prev_wheel;
             b32 button_state[GLFW_MOUSE_BUTTON_LAST];
             b32 prev_button_state[GLFW_MOUSE_BUTTON_LAST];
         } mouse;
