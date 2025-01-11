@@ -1,5 +1,5 @@
 Camera make_camera(vec3 pos, f32 pitch, f32 yaw) {
-    Camera result;
+    Camera result = {0};
     result.pos = pos;
     result.pitch = pitch;
     result.yaw = yaw;

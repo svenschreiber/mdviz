@@ -6,73 +6,33 @@
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 
+// TODO: cleanup
+typedef struct {
+    GLuint vao;
+    GLuint vbo;
+} Sim_Geometry;
+
 #include "main.h"
 #include "string.h"
 #include "util.h"
 #include "math.h"
+#include "shader.h"
+#include "data_loader.h"
+#include "draw.h"
 #include "input.h"
 #include "camera.h"
 #include "time.h"
 #include "state.h"
-#include "shader.h"
 
 #include "string.c"
 #include "util.c"
 #include "math.c"
+#include "shader.c"
+#include "data_loader.c"
+#include "draw.c"
 #include "input.c"
 #include "camera.c"
 #include "time.c"
-#include "shader.c"
-
-typedef struct Particle {
-    f32 x;
-    f32 y;
-    f32 z;
-    f32 v;
-} Particle;
-
-typedef struct Sim_Step {
-    Particle *particles;
-    u32 count;
-} Sim_Step;
-
-vec2 get_velocity_bounds(Sim_Step step) {
-    f32 min_v = FLT_MAX;
-    f32 max_v = -FLT_MAX;
-    for (u32 i = 0; i < step.count; ++i) {
-        f32 v = step.particles[i].v;
-        if (v < min_v) min_v = v;
-        if (v > max_v) max_v = v;
-    }
-    return vec2(min_v, max_v);
-}
-
-Sim_Step parse_sim_step(String csv) {
-    // preprocessing
-    csv = str_trim(csv);
-    str_read_line(&csv, NULL);
-    
-    String *lines = str_split(csv, Str("\n"));
-    Sim_Step step = {
-        .particles = ALLOC(Particle, arrlen(lines)),
-        .count = arrlen(lines)
-    };
-
-    for (u32 i = 0; i < arrlen(lines); ++i) {
-        String line = lines[i];
-        String *values = str_split(line, Str(","));
-        assert(arrlen(values) == 4);
-        step.particles[i] = (Particle){
-            .x = str_to_f32(values[0]),
-            .y = str_to_f32(values[1]),
-            .z = str_to_f32(values[2]),
-            .v = str_to_f32(values[3])
-        };
-        arrfree(values);
-    }
-    arrfree(lines);
-    return step;
-}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -85,6 +45,10 @@ void register_window_callbacks(GLFWwindow* window) {
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+}
+
+Sim_Step *get_selected_step() {
+    return &state.seq.steps[state.seq.selected];
 }
 
 int main(int argc, char** argv) {
@@ -117,25 +81,14 @@ int main(int argc, char** argv) {
 
     register_window_callbacks(window);
 
-    String csv = read_entire_file("res/mdsimulation/collision.10.csv");
-    Sim_Step step = parse_sim_step(csv);
+    String csv = read_entire_file("res/mdsimulation/collision.csv");
+    state.seq = load_sim_sequence(csv);
     free(csv.data);
-    vec2 step_vel_bounds = get_velocity_bounds(step);
 
     glEnable(GL_PROGRAM_POINT_SIZE);
     GLuint shader = load_shader_program("res/shader/points.vs", "res/shader/points.fs");
 
-    GLuint point_vao;
-    glGenVertexArrays(1, &point_vao);
-    glBindVertexArray(point_vao);
-    GLuint point_vbo;
-    glGenBuffers(1, &point_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
-    glBufferData(GL_ARRAY_BUFFER, step.count * sizeof(Particle), step.particles, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (GLvoid *)0);
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (GLvoid *)(3 * sizeof(f32)));
-
-    glPointSize(2.0f);
+    state.geom = make_sim_geometry(&state.seq);
 
     Camera cam = make_camera(vec3(0.0f, 0.0f, 150.0f), 0.0f, -90.0f);
     glfwGetFramebufferSize(window, &state.window.render.width, &state.window.render.height);
@@ -150,9 +103,9 @@ int main(int argc, char** argv) {
         update_time();
 
         glfwPollEvents();
-        process_inputs(window);
 
         if (should_redraw()) {
+            process_inputs(window);
             move_cam(&cam);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -160,12 +113,12 @@ int main(int argc, char** argv) {
             mat4 view_matrix = camera_get_view_matrix(&cam);
             shader_set_mat4(shader, "view", view_matrix);
             shader_set_vec3(shader, "cam_pos", cam.pos);
-            shader_set_vec2(shader, "vel_bounds", step_vel_bounds);
+            shader_set_vec2(shader, "vel_bounds", get_selected_step()->bounds);
 
-            glBindVertexArray(point_vao);
+            glBindVertexArray(state.geom.vao);
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
-            glDrawArrays(GL_POINTS, 0, step.count);
+            glDrawArrays(GL_POINTS, 0, get_selected_step()->count);
 
             glfwSwapBuffers(window);
             reset_frame_time();

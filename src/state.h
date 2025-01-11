@@ -27,6 +27,9 @@ typedef struct State {
     struct {
         ivec2 render;
     } window;
+
+    Sim_Sequence seq;
+    Sim_Geometry geom;
 } State;
 
 State state = {0};
