@@ -3,6 +3,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         state.input.keyboard.key_state[key] = true;
     } else if (action == GLFW_RELEASE) {
         state.input.keyboard.key_state[key] = false;
+        state.input.keyboard.key_repeat_state[key] = false;
+    } else if (action == GLFW_REPEAT) {
+        state.input.keyboard.key_repeat_state[key] = true;
     }
 }
 
@@ -46,6 +49,10 @@ b32 is_key_held(int key) {
     return state.input.keyboard.key_state[key] && state.input.keyboard.prev_key_state[key];
 }
 
+b32 is_key_repeated(int key) {
+    return state.input.keyboard.key_repeat_state[key];
+}
+
 b32 is_mouse_button_down(int button) {
     return state.input.mouse.button_state[button];
 }
@@ -59,14 +66,14 @@ void process_inputs(GLFWwindow *window) {
         glfwSetWindowShouldClose(window, true);
     }
 
-    if (is_key_down(GLFW_KEY_RIGHT) && !is_key_held(GLFW_KEY_RIGHT)) {
+    if (is_key_down(GLFW_KEY_RIGHT) && !is_key_held(GLFW_KEY_RIGHT) || is_key_repeated(GLFW_KEY_RIGHT)) {
         if (state.seq.selected + 1 < state.seq.count) {
             ++state.seq.selected;
             update_geometry(&state.geom);
         }
     }
 
-    if (is_key_down(GLFW_KEY_LEFT) && !is_key_held(GLFW_KEY_LEFT)) {
+    if (is_key_down(GLFW_KEY_LEFT) && !is_key_held(GLFW_KEY_LEFT) || is_key_repeated(GLFW_KEY_LEFT)) {
         if (state.seq.selected - 1 >= 0) {
             --state.seq.selected;
             update_geometry(&state.geom);

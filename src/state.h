@@ -6,6 +6,7 @@ typedef struct State {
         struct {
             b32 key_state[GLFW_KEY_LAST];
             b32 prev_key_state[GLFW_KEY_LAST];
+            b32 key_repeat_state[GLFW_KEY_LAST];
         } keyboard;
         struct {
             vec2 pos;
