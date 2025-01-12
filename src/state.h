@@ -26,6 +26,7 @@ typedef struct State {
         f32 frame_dt;
     } time;
     struct {
+        struct nk_context *nk_ctx;
         ivec2 render;
     } window;
 
