@@ -18,6 +18,9 @@ typedef struct Sim_Sequence {
     Sim_Step *steps;
     u32 count;
     s32 selected;
+    u32 steps_per_second;
+    b32 playing;
+    f32 timer;
 } Sim_Sequence;
 
 void update_velocity_bounds(Sim_Step *step, f32 v);
