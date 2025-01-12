@@ -52,7 +52,7 @@ void move_cam(Camera *cam) {
     f32 delta = get_frame_time();
     f32 mouse_sens = 10.0f * delta;
 
-    if (is_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
+    if (is_mouse_button_down(GLFW_MOUSE_BUTTON_LEFT) && !is_mouse_button_ui_interaction(GLFW_MOUSE_BUTTON_LEFT)) {
         vec2 offset = v2_mul_f32(get_mouse_delta(), mouse_sens);
         camera_set_orientation(cam, cam->pitch + offset.y, cam->yaw - offset.x);
     }
