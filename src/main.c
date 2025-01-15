@@ -21,6 +21,8 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
+#include <mdlib.h>
+
 // TODO: cleanup
 typedef struct {
     GLuint vao;
@@ -126,6 +128,9 @@ int main(int argc, char** argv) {
     set_max_fps(60);
     update_time(); // to initialize time
 
+    MD_ParticleContainer *cont = md_get_aos_problem(10, 10, 10, 0.5, 55.0, -55.0, 55.0, -55.0, 55.0, -55.0);
+    printf("Container size: %zu\n", md_cont_size(cont));
+
     while (!glfwWindowShouldClose(window)) {
         update_time();
         if (state.seq.playing) {
@@ -172,26 +177,21 @@ int main(int argc, char** argv) {
                 }
 
 
-                static int sim_step = 0;
                 f32 step_time = 1.0f / state.seq.steps_per_second;
                 if (state.seq.timer > step_time) {
                     s32 skip_frames = (s32)(state.seq.timer / step_time);
-                    sim_step = (sim_step + skip_frames) % state.seq.count;
+                    state.ui.sim_step = (state.ui.sim_step + skip_frames) % state.seq.count;
                     state.seq.timer = 0.0f;
                 }
 
                 nk_layout_row_dynamic(ctx, 25, 1);
-                nk_property_int(ctx, "Simulation Step:", 0, &sim_step, state.seq.count - 1, 1, 1);
-                if (sim_step != state.seq.selected) {
-                    state.seq.selected = sim_step;
+                nk_property_int(ctx, "Simulation Step:", 0, &state.ui.sim_step, state.seq.count - 1, 1, 1);
+                if (state.ui.sim_step != state.seq.selected) {
+                    state.seq.selected = state.ui.sim_step;
                     update_geometry(&state.geom);
                 }
 
-                static int steps_per_second = 30;
-                nk_property_int(ctx, "Steps per second:", 0, &steps_per_second, 1000, 1, 1);
-                if (steps_per_second != state.seq.steps_per_second) {
-                    state.seq.steps_per_second = steps_per_second;
-                }
+                nk_property_int(ctx, "Steps per second:", 0, &state.seq.steps_per_second, 1000, 1, 1);
             }
             nk_end(ctx);
 
@@ -204,6 +204,7 @@ int main(int argc, char** argv) {
 
     }
 
+    md_cont_destroy(cont);
     nk_glfw3_shutdown();
     glfwTerminate();
     return 0;

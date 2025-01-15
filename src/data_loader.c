@@ -18,7 +18,8 @@ Sim_Sequence load_sim_sequence(String csv) {
     Sim_Sequence seq = {
         .steps = ALLOC(Sim_Step, step_count),
         .count = step_count,
-        .selected = 0
+        .selected = 0,
+        .steps_per_second = 30,
     };
     u32 particles_per_step = arrlen(lines) / step_count;
 

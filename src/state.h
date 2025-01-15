@@ -34,6 +34,9 @@ typedef struct State {
         struct nk_context *nk_ctx;
         ivec2 render;
     } window;
+    struct {
+        s32 sim_step;
+    } ui;
 
     GLuint shader;
     Sim_Sequence seq;

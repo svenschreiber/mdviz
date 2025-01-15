@@ -18,7 +18,7 @@ typedef struct Sim_Sequence {
     Sim_Step *steps;
     u32 count;
     s32 selected;
-    u32 steps_per_second;
+    s32 steps_per_second;
     b32 playing;
     f32 timer;
 } Sim_Sequence;
