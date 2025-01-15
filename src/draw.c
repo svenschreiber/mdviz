@@ -18,3 +18,8 @@ void update_geometry(Sim_Geometry *geom) {
     glBufferSubData(GL_ARRAY_BUFFER, 0, step->count * sizeof(Particle), step->particles);
 }
 
+void set_geometry(Sim_Geometry *geom, f32 *data, u32 n) {
+    glBindVertexArray(geom->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, geom->vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, n * sizeof(f32), data);
+}

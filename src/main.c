@@ -54,7 +54,7 @@ typedef struct {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
     state.window.render = ivec2(width, height);
-    mat4 projection_matrix = m4_perspective(to_radians(90.0f), (f32)width / height, 1000.f, 0.1f);
+    mat4 projection_matrix = m4_perspective(to_radians(90.0f), (f32)width / height, 10000.f, 0.1f);
     shader_use(state.shader);
     shader_set_mat4(state.shader, "projection", projection_matrix);
 }
@@ -70,6 +70,34 @@ void register_window_callbacks(GLFWwindow* window) {
 
 Sim_Step *get_selected_step() {
     return &state.seq.steps[state.seq.selected];
+}
+
+vec2 get_vel_bounds(f32 *data, u32 n) {
+    vec2 bounds = vec2(FLT_MAX, -FLT_MAX);
+    for (u32 i = 0; i < n; ++i) {
+        f32 vel = data[i * 4 + 3];
+        if (vel < bounds.x) bounds.x = vel;
+        if (vel > bounds.y) bounds.y = vel;
+    }
+    return bounds;
+}
+
+void step_simulation() {
+    md_vel_stoer_verlet_update_positions(state.sim.integrator, state.sim.cont);
+
+    // apply boundaries
+    md_refl_bound_apply_cont(state.sim.x_boundary, state.sim.cont);
+    md_refl_bound_apply_cont(state.sim.y_boundary, state.sim.cont);
+    md_refl_bound_apply_cont(state.sim.z_boundary, state.sim.cont);
+
+    // flush forces
+    md_cont_flush_forces(state.sim.cont);
+
+    // compute new forces
+    md_ljforce_apply(state.sim.cont);
+
+    // update velocities
+    md_vel_stoer_verlet_update_velocities(state.sim.integrator, state.sim.cont);
 }
 
 int main(int argc, char** argv) {
@@ -126,10 +154,22 @@ int main(int argc, char** argv) {
     shader_set_mat4(state.shader, "projection", projection_matrix);
 
     set_max_fps(60);
-    update_time(); // to initialize time
+    update_time(); // initialize time
 
-    MD_ParticleContainer *cont = md_get_aos_problem(10, 10, 10, 0.5, 55.0, -55.0, 55.0, -55.0, 55.0, -55.0);
-    printf("Container size: %zu\n", md_cont_size(cont));
+    state.sim.cont = md_get_aos_problem(10, 10, 10, 0.5, 55.0, -55.0, 55.0, -55.0, 55.0, -55.0);
+    u32 n_particles = md_cont_size(state.sim.cont);
+    printf("Created particle container of size: %u\n", n_particles);
+    FP_TYPE dt = 1.0;
+    state.sim.x_boundary = md_refl_bound_create((FP_TYPE)-55.0+(FP_TYPE)1e-3, (FP_TYPE)55.0-(FP_TYPE)1e-3, 0);
+    state.sim.y_boundary = md_refl_bound_create((FP_TYPE)-55.0+(FP_TYPE)1e-3, (FP_TYPE)55.0-(FP_TYPE)1e-3, 1);
+    state.sim.z_boundary = md_refl_bound_create((FP_TYPE)-55.0+(FP_TYPE)1e-3, (FP_TYPE)55.0-(FP_TYPE)1e-3, 2);
+    state.sim.integrator = md_vel_stoer_verlet_create(dt);
+    md_ljforce_apply(state.sim.cont); // init forces
+    f32 *data = ALLOC(f32, 4 * n_particles);
+    md_cont_get_data(state.sim.cont, data);
+    set_geometry(&state.geom, data, 4 * n_particles);
+    vec2 bounds = get_vel_bounds(data, n_particles);
+
 
     while (!glfwWindowShouldClose(window)) {
         update_time();
@@ -152,7 +192,7 @@ int main(int argc, char** argv) {
             mat4 view_matrix = camera_get_view_matrix(&cam);
             shader_set_mat4(state.shader, "view", view_matrix);
             shader_set_vec3(state.shader, "cam_pos", cam.pos);
-            shader_set_vec2(state.shader, "vel_bounds", get_selected_step()->bounds);
+            shader_set_vec2(state.shader, "vel_bounds", bounds);
 
             glBindVertexArray(state.geom.vao);
             glEnableVertexAttribArray(0);
@@ -176,20 +216,23 @@ int main(int argc, char** argv) {
                     }
                 }
 
-
                 f32 step_time = 1.0f / state.seq.steps_per_second;
                 if (state.seq.timer > step_time) {
-                    s32 skip_frames = (s32)(state.seq.timer / step_time);
-                    state.ui.sim_step = (state.ui.sim_step + skip_frames) % state.seq.count;
+                    // s32 skip_frames = (s32)(state.seq.timer / step_time);
+                    // state.ui.sim_step = (state.ui.sim_step + skip_frames) % state.seq.count;
+                    step_simulation();
+                    md_cont_get_data(state.sim.cont, data);
+                    set_geometry(&state.geom, data, 4 * n_particles);
+                    bounds = get_vel_bounds(data, n_particles);
                     state.seq.timer = 0.0f;
                 }
 
                 nk_layout_row_dynamic(ctx, 25, 1);
-                nk_property_int(ctx, "Simulation Step:", 0, &state.ui.sim_step, state.seq.count - 1, 1, 1);
-                if (state.ui.sim_step != state.seq.selected) {
-                    state.seq.selected = state.ui.sim_step;
-                    update_geometry(&state.geom);
-                }
+                // nk_property_int(ctx, "Simulation Step:", 0, &state.ui.sim_step, state.seq.count - 1, 1, 1);
+                // if (state.ui.sim_step != state.seq.selected) {
+                //     state.seq.selected = state.ui.sim_step;
+                //     update_geometry(&state.geom);
+                // }
 
                 nk_property_int(ctx, "Steps per second:", 0, &state.seq.steps_per_second, 1000, 1, 1);
             }
@@ -204,7 +247,11 @@ int main(int argc, char** argv) {
 
     }
 
-    md_cont_destroy(cont);
+    md_cont_destroy(state.sim.cont);
+    md_refl_bound_destroy(state.sim.x_boundary);
+    md_refl_bound_destroy(state.sim.y_boundary);
+    md_refl_bound_destroy(state.sim.z_boundary);
+    md_vel_stoer_verlet_destroy(state.sim.integrator);
     nk_glfw3_shutdown();
     glfwTerminate();
     return 0;

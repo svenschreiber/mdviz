@@ -37,6 +37,13 @@ typedef struct State {
     struct {
         s32 sim_step;
     } ui;
+    struct {
+        MD_ParticleContainer *cont;
+        MD_ReflectiveBoundary *x_boundary;
+        MD_ReflectiveBoundary *y_boundary;
+        MD_ReflectiveBoundary *z_boundary;
+        MD_VelocityStoermerVerlet *integrator;
+    } sim;
 
     GLuint shader;
     Sim_Sequence seq;
