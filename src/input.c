@@ -78,17 +78,17 @@ void process_inputs(GLFWwindow *window) {
         glfwSetWindowShouldClose(window, true);
     }
 
-    if (is_key_down(GLFW_KEY_RIGHT) && !is_key_held(GLFW_KEY_RIGHT) || is_key_repeated(GLFW_KEY_RIGHT)) {
-        if (state.ui.sim_step + 1 < state.seq.count) {
-            ++state.ui.sim_step;
-            update_geometry(&state.geom);
-        }
-    }
-
-    if (is_key_down(GLFW_KEY_LEFT) && !is_key_held(GLFW_KEY_LEFT) || is_key_repeated(GLFW_KEY_LEFT)) {
-        if (state.ui.sim_step - 1 >= 0) {
-            --state.ui.sim_step;
-            update_geometry(&state.geom);
-        }
-    }
+    // if (is_key_down(GLFW_KEY_RIGHT) && !is_key_held(GLFW_KEY_RIGHT) || is_key_repeated(GLFW_KEY_RIGHT)) {
+    //     if (state.ui.sim_step + 1 < state.seq.count) {
+    //         ++state.ui.sim_step;
+    //         update_geometry(&state.geom);
+    //     }
+    // }
+    //
+    // if (is_key_down(GLFW_KEY_LEFT) && !is_key_held(GLFW_KEY_LEFT) || is_key_repeated(GLFW_KEY_LEFT)) {
+    //     if (state.ui.sim_step - 1 >= 0) {
+    //         --state.ui.sim_step;
+    //         update_geometry(&state.geom);
+    //     }
+    // }
 }

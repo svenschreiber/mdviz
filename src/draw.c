@@ -1,25 +1,22 @@
-Sim_Geometry make_sim_geometry(Sim_Sequence *seq) {
-    Sim_Geometry geom = {0};
-    glGenVertexArrays(1, &geom.vao);
-    glGenBuffers(1, &geom.vbo);
-    glBindVertexArray(geom.vao);
-    glBindBuffer(GL_ARRAY_BUFFER, geom.vbo);
-    Sim_Step *step = &seq->steps[seq->selected];
-    glBufferData(GL_ARRAY_BUFFER, step->count * sizeof(Particle), step->particles, GL_DYNAMIC_DRAW);
+void init_sim_geometry() {
+    GLuint *vao = &state.sim.geometry.vao;
+    GLuint *vbo = &state.sim.geometry.vbo;
+    glGenVertexArrays(1, vao);
+    glGenBuffers(1, vbo);
+    glBindVertexArray(*vao);
+    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (GLvoid *)0);
     glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (GLvoid *)(3 * sizeof(f32)));
-    return geom;
 }
 
-void update_geometry(Sim_Geometry *geom) {
-    glBindVertexArray(geom->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, geom->vbo);
-    Sim_Step *step = &state.seq.steps[state.seq.selected];
-    glBufferSubData(GL_ARRAY_BUFFER, 0, step->count * sizeof(Particle), step->particles);
+void alloc_vbo_data(u32 n_particles) {
+    glBindVertexArray(state.sim.geometry.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, state.sim.geometry.vbo);
+    glBufferData(GL_ARRAY_BUFFER, n_particles * sizeof(Particle), NULL, GL_DYNAMIC_DRAW);
 }
 
-void set_geometry(Sim_Geometry *geom, f32 *data, u32 n) {
-    glBindVertexArray(geom->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, geom->vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, n * sizeof(f32), data);
+void update_vbo_data() {
+    glBindVertexArray(state.sim.geometry.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, state.sim.geometry.vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, state.sim.geometry.n_particles * sizeof(Particle), state.sim.geometry.data);
 }

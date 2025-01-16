@@ -1,8 +1,8 @@
 #ifndef DRAW_H
 #define DRAW_H
 
-Sim_Geometry make_sim_geometry(Sim_Sequence *seq);
-void update_geometry(Sim_Geometry *geom);
-void set_geometry(Sim_Geometry *geom, f32 *data, u32 n);
+void init_sim_geometry();
+void alloc_vbo_data(u32 n_particles);
+void update_vbo_data();
 
 #endif // DRAW_H

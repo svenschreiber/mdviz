@@ -17,6 +17,7 @@ MD_ParticleContainer *md_get_aos_problem(size_t n_x, size_t n_y, size_t n_z, FP_
 // ParticleContainer
 void md_cont_destroy(MD_ParticleContainer *cont);
 size_t md_cont_size(MD_ParticleContainer *cont);
+size_t md_cont_capacity(MD_ParticleContainer *cont);
 void md_cont_flush_forces(MD_ParticleContainer *cont);
 void md_cont_get_data(MD_ParticleContainer *cont, float *result);
 

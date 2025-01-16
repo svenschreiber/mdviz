@@ -32,6 +32,7 @@ typedef struct State {
     } time;
     struct {
         struct nk_context *nk_ctx;
+        struct nk_glfw glfw;
         ivec2 render;
     } window;
     struct {
@@ -42,7 +43,38 @@ typedef struct State {
         MD_ReflectiveBoundary *x_boundary;
         MD_ReflectiveBoundary *y_boundary;
         MD_ReflectiveBoundary *z_boundary;
-        MD_VelocityStoermerVerlet *integrator;
+        MD_VelocityStoermerVerlet *vel_stoer_verlet;
+        struct {
+            ivec3 n;
+            f32 vel;
+            vec2 bounds_x;
+            vec2 bounds_y;
+            vec2 bounds_z;
+            b32 changed;
+        } problem;
+        struct {
+            vec2 x;
+            vec2 y;
+            vec2 z;
+            b32 changed;
+        } boundaries;
+        struct {
+            f32 dt;
+            b32 changed;
+        } integrator;
+        struct {
+            GLuint vao;
+            GLuint vbo;
+            Particle *data;
+            u32 n_particles;
+            vec2 vel_bounds;
+            b32 changed;
+        } geometry;
+
+        // Playback
+        b32 playing;
+        f32 timer;
+        s32 steps_per_second;
     } sim;
 
     GLuint shader;
