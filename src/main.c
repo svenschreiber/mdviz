@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
             }
 
             if (state.sim.problem.changed) {
-                md_cont_destroy(state.sim.cont);
+                if (state.sim.cont) md_cont_destroy(state.sim.cont);
                 state.sim.cont = md_get_aos_problem(
                     state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
                     state.sim.problem.vel,
@@ -284,6 +284,7 @@ int main(int argc, char** argv) {
                 }
 
                 nk_layout_row_dynamic(ctx, 25, 1);
+                nk_value_float(ctx, "Frame time:", state.time.frame_dt * 1000);
                 nk_label(ctx, "Problem", NK_TEXT_LEFT);
                 if (nk_property_int(ctx, "x:", 0, &state.sim.problem.n.x, 1000, 1, 1)) state.sim.problem.changed = true;
                 if (nk_property_int(ctx, "y:", 0, &state.sim.problem.n.y, 1000, 1, 1)) state.sim.problem.changed = true;

@@ -6,6 +6,13 @@ extern "C" {
 
 typedef double FP_TYPE;
 
+typedef enum {
+    CONT_ParticleContainer,
+    CONT_SoAContainer,
+    CONT_LinkedCellContainer,
+    CONT_ParallelLCContainer,
+} ContainerType;
+
 // Class handles
 typedef struct MD_ParticleContainer MD_ParticleContainer;
 typedef struct MD_ReflectiveBoundary MD_ReflectiveBoundary;
@@ -13,11 +20,13 @@ typedef struct MD_VelocityStoermerVerlet MD_VelocityStoermerVerlet;
 
 // Problem
 MD_ParticleContainer *md_get_aos_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE max_x, FP_TYPE min_x, FP_TYPE max_y, FP_TYPE min_y, FP_TYPE max_z, FP_TYPE min_z);
+MD_ParticleContainer *md_get_soa_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE max_x, FP_TYPE min_x, FP_TYPE max_y, FP_TYPE min_y, FP_TYPE max_z, FP_TYPE min_z);
+// MD_ParticleContainer *md_lc_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE min_x, FP_TYPE min_y, FP_TYPE min_z, FP_TYPE r_cut, size_t x_cells, size_t y_cells, size_t z_cells);
+// MD_ParticleContainer *md_plc_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE min_x, FP_TYPE min_y, FP_TYPE min_z, FP_TYPE r_cut, size_t x_cells, size_t y_cells, size_t z_cells);
 
 // ParticleContainer
 void md_cont_destroy(MD_ParticleContainer *cont);
 size_t md_cont_size(MD_ParticleContainer *cont);
-size_t md_cont_capacity(MD_ParticleContainer *cont);
 void md_cont_flush_forces(MD_ParticleContainer *cont);
 void md_cont_get_data(MD_ParticleContainer *cont, float *result);
 
