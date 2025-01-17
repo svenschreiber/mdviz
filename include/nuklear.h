@@ -3600,7 +3600,7 @@ NK_API nk_bool nk_property_int(struct nk_context*, const char *name, int min, in
  * \param[in] step            | Increment added and subtracted on increment and decrement button
  * \param[in] inc_per_pixel   | Value per pixel added or subtracted on dragging
  */
-NK_API void nk_property_float(struct nk_context*, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
+NK_API nk_bool nk_property_float(struct nk_context*, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
 
 /**
  * # # nk_property_double
@@ -29075,7 +29075,7 @@ nk_property_int(struct nk_context *ctx, const char *name,
     *val = variant.value.i;
     return changed;
 }
-NK_API void
+NK_API nk_bool
 nk_property_float(struct nk_context *ctx, const char *name,
     float min, float *val, float max, float step, float inc_per_pixel)
 {
@@ -29084,10 +29084,12 @@ nk_property_float(struct nk_context *ctx, const char *name,
     NK_ASSERT(name);
     NK_ASSERT(val);
 
-    if (!ctx || !ctx->current || !name || !val) return;
+    if (!ctx || !ctx->current || !name || !val) return 0;
     variant = nk_property_variant_float(*val, min, max, step);
     nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT);
+    nk_bool changed = *val != variant.value.f;
     *val = variant.value.f;
+    return changed;
 }
 NK_API void
 nk_property_double(struct nk_context *ctx, const char *name,

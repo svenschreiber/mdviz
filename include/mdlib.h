@@ -11,7 +11,7 @@ typedef enum {
     CONT_SoAContainer,
     CONT_LinkedCellContainer,
     CONT_ParallelLCContainer,
-} ContainerType;
+} MD_ContainerType;
 
 // Class handles
 typedef struct MD_ParticleContainer MD_ParticleContainer;

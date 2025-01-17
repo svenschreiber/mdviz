@@ -39,6 +39,7 @@ typedef struct State {
         s32 sim_step;
     } ui;
     struct {
+        MD_ContainerType type;
         MD_ParticleContainer *cont;
         MD_ReflectiveBoundary *x_boundary;
         MD_ReflectiveBoundary *y_boundary;

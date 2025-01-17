@@ -161,12 +161,14 @@ int main(int argc, char** argv) {
     update_time(); // initialize time
 
     // Set initial simulation state
+    state.sim.type = CONT_ParticleContainer;
+
     // Problem:
     state.sim.problem.n        = ivec3(10, 10, 10);
     state.sim.problem.vel      = 0.5f;
-    state.sim.problem.bounds_x = vec2(55.0f, -55.0f);
-    state.sim.problem.bounds_y = vec2(55.0f, -55.0f);
-    state.sim.problem.bounds_z = vec2(55.0f, -55.0f);
+    state.sim.problem.bounds_x = vec2(-55.0f, 55.0f);
+    state.sim.problem.bounds_y = vec2(-55.0f, 55.0f);
+    state.sim.problem.bounds_z = vec2(-55.0f, 55.0f);
     state.sim.problem.changed  = true;
 
     // Reflective Boundaries
@@ -181,6 +183,8 @@ int main(int argc, char** argv) {
 
     // Sim playback
     state.sim.steps_per_second = 30;
+
+    char *items[] = {"ParticleContainer", "SoAContainer", "LinkedCellContainer", "ParallelLCContainer"};
 
     while (!glfwWindowShouldClose(window)) {
         update_time();
@@ -199,19 +203,45 @@ int main(int argc, char** argv) {
 
             if (state.sim.problem.changed) {
                 if (state.sim.cont) md_cont_destroy(state.sim.cont);
-                // state.sim.cont = md_get_soa_problem(
-                //     state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
-                //     state.sim.problem.vel,
-                //     state.sim.problem.bounds_x.x, state.sim.problem.bounds_x.y, 
-                //     state.sim.problem.bounds_y.x, state.sim.problem.bounds_y.y, 
-                //     state.sim.problem.bounds_z.x, state.sim.problem.bounds_z.y
-                // );
-                state.sim.cont = md_get_lc_problem(
-                    state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
-                    state.sim.problem.vel,
-                    state.sim.problem.bounds_x.y, state.sim.problem.bounds_y.y, state.sim.problem.bounds_z.y,
-                    10.0, 11, 11, 11
-                );
+                switch (state.sim.type) {
+                    case CONT_ParticleContainer: {
+                        state.sim.cont = md_get_aos_problem(
+                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
+                            state.sim.problem.vel,
+                            state.sim.problem.bounds_x.y, state.sim.problem.bounds_x.x, 
+                            state.sim.problem.bounds_y.y, state.sim.problem.bounds_y.x, 
+                            state.sim.problem.bounds_z.y, state.sim.problem.bounds_z.x
+                        );
+                    } break;
+
+                    case CONT_SoAContainer: {
+                        state.sim.cont = md_get_soa_problem(
+                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
+                            state.sim.problem.vel,
+                            state.sim.problem.bounds_x.y, state.sim.problem.bounds_x.x, 
+                            state.sim.problem.bounds_y.y, state.sim.problem.bounds_y.x, 
+                            state.sim.problem.bounds_z.y, state.sim.problem.bounds_z.x
+                        );
+                    } break;
+
+                    case CONT_LinkedCellContainer: {
+                        state.sim.cont = md_get_lc_problem(
+                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
+                            state.sim.problem.vel,
+                            state.sim.problem.bounds_x.x, state.sim.problem.bounds_y.x, state.sim.problem.bounds_z.x,
+                            10.0, 11, 11, 11
+                        );
+                    } break;
+
+                    case CONT_ParallelLCContainer: {
+                        state.sim.cont = md_get_plc_problem(
+                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
+                            state.sim.problem.vel,
+                            state.sim.problem.bounds_x.x, state.sim.problem.bounds_y.x, state.sim.problem.bounds_z.x,
+                            10.0, 11, 11, 11
+                        );
+                    } break;
+                }
                 // init forces
                 md_ljforce_apply(state.sim.cont);
 
@@ -267,10 +297,22 @@ int main(int argc, char** argv) {
             glDrawArrays(GL_POINTS, 0, state.sim.geometry.n_particles);
 
 
-            if (nk_begin(ctx, "Controls", nk_rect(50, 50, 230, 250),
+            if (nk_begin(ctx, "Controls", nk_rect(50, 50, 230, 350),
                          NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
                          NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
             {
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                if (nk_combo_begin_label(ctx, items[state.sim.type], nk_vec2(nk_widget_width(ctx), 200))) {
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    for (int i = 0; i < 4; ++i)
+                        if (nk_combo_item_label(ctx, items[i], NK_TEXT_LEFT)) {
+                            state.sim.type = i;
+                            state.sim.problem.changed = true;
+                        }
+                    nk_combo_end(ctx);
+                }
+
                 nk_layout_row_static(ctx, 30, 80, 1);
                 if (!state.sim.playing) {
                     if (nk_button_label(ctx, "Play")) {
@@ -291,7 +333,9 @@ int main(int argc, char** argv) {
                 }
 
                 nk_layout_row_dynamic(ctx, 25, 1);
+
                 nk_value_float(ctx, "Frame time:", state.time.frame_dt * 1000);
+                if (nk_property_float(ctx, "dt:", -10.0f, &state.sim.integrator.dt, 10.0f, 0.1f, 0.1f)) state.sim.integrator.changed = true;
                 nk_label(ctx, "Problem", NK_TEXT_LEFT);
                 if (nk_property_int(ctx, "x:", 0, &state.sim.problem.n.x, 1000, 1, 1)) state.sim.problem.changed = true;
                 if (nk_property_int(ctx, "y:", 0, &state.sim.problem.n.y, 1000, 1, 1)) state.sim.problem.changed = true;
