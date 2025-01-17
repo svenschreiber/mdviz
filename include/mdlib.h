@@ -21,8 +21,8 @@ typedef struct MD_VelocityStoermerVerlet MD_VelocityStoermerVerlet;
 // Problem
 MD_ParticleContainer *md_get_aos_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE max_x, FP_TYPE min_x, FP_TYPE max_y, FP_TYPE min_y, FP_TYPE max_z, FP_TYPE min_z);
 MD_ParticleContainer *md_get_soa_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE max_x, FP_TYPE min_x, FP_TYPE max_y, FP_TYPE min_y, FP_TYPE max_z, FP_TYPE min_z);
-// MD_ParticleContainer *md_lc_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE min_x, FP_TYPE min_y, FP_TYPE min_z, FP_TYPE r_cut, size_t x_cells, size_t y_cells, size_t z_cells);
-// MD_ParticleContainer *md_plc_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE min_x, FP_TYPE min_y, FP_TYPE min_z, FP_TYPE r_cut, size_t x_cells, size_t y_cells, size_t z_cells);
+MD_ParticleContainer *md_get_lc_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE min_x, FP_TYPE min_y, FP_TYPE min_z, FP_TYPE r_cut, size_t x_cells, size_t y_cells, size_t z_cells);
+MD_ParticleContainer *md_get_plc_problem(size_t n_x, size_t n_y, size_t n_z, FP_TYPE v_particles, FP_TYPE min_x, FP_TYPE min_y, FP_TYPE min_z, FP_TYPE r_cut, size_t x_cells, size_t y_cells, size_t z_cells);
 
 // ParticleContainer
 void md_cont_destroy(MD_ParticleContainer *cont);

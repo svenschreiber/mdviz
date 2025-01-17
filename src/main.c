@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
     state.sim.boundaries.changed = true;
 
     // Integrator
-    state.sim.integrator.dt      = 1.0f;
+    state.sim.integrator.dt      = 0.1f;
     state.sim.integrator.changed = true;
 
     // Sim playback
@@ -199,12 +199,18 @@ int main(int argc, char** argv) {
 
             if (state.sim.problem.changed) {
                 if (state.sim.cont) md_cont_destroy(state.sim.cont);
-                state.sim.cont = md_get_aos_problem(
+                // state.sim.cont = md_get_soa_problem(
+                //     state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
+                //     state.sim.problem.vel,
+                //     state.sim.problem.bounds_x.x, state.sim.problem.bounds_x.y, 
+                //     state.sim.problem.bounds_y.x, state.sim.problem.bounds_y.y, 
+                //     state.sim.problem.bounds_z.x, state.sim.problem.bounds_z.y
+                // );
+                state.sim.cont = md_get_lc_problem(
                     state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
                     state.sim.problem.vel,
-                    state.sim.problem.bounds_x.x, state.sim.problem.bounds_x.y, 
-                    state.sim.problem.bounds_y.x, state.sim.problem.bounds_y.y, 
-                    state.sim.problem.bounds_z.x, state.sim.problem.bounds_z.y
+                    state.sim.problem.bounds_x.y, state.sim.problem.bounds_y.y, state.sim.problem.bounds_z.y,
+                    10.0, 11, 11, 11
                 );
                 // init forces
                 md_ljforce_apply(state.sim.cont);
@@ -242,6 +248,7 @@ int main(int argc, char** argv) {
                 update_vbo_data();
 
                 state.sim.geometry.vel_bounds = get_vel_bounds();
+                // printf("%f\n", state.sim.geometry.vel_bounds.y);
 
                 state.sim.geometry.changed = false;
             }
