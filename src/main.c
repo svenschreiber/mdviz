@@ -40,6 +40,7 @@ typedef struct {
 #include "camera.h"
 #include "time.h"
 #include "state.h"
+#include "sim.h"
 
 #include "string.c"
 #include "util.c"
@@ -50,6 +51,7 @@ typedef struct {
 #include "input.c"
 #include "camera.c"
 #include "time.c"
+#include "sim.c"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -160,29 +162,7 @@ int main(int argc, char** argv) {
     set_max_fps(60);
     update_time(); // initialize time
 
-    // Set initial simulation state
-    state.sim.type = CONT_ParticleContainer;
-
-    // Problem:
-    state.sim.problem.n        = ivec3(10, 10, 10);
-    state.sim.problem.vel      = 0.5f;
-    state.sim.problem.bounds_x = vec2(-55.0f, 55.0f);
-    state.sim.problem.bounds_y = vec2(-55.0f, 55.0f);
-    state.sim.problem.bounds_z = vec2(-55.0f, 55.0f);
-    state.sim.problem.changed  = true;
-
-    // Reflective Boundaries
-    state.sim.boundaries.x = vec2(-55.0f + 1e-3, 55.0f - 1e-3);
-    state.sim.boundaries.y = vec2(-55.0f + 1e-3, 55.0f - 1e-3);
-    state.sim.boundaries.z = vec2(-55.0f + 1e-3, 55.0f - 1e-3);
-    state.sim.boundaries.changed = true;
-
-    // Integrator
-    state.sim.integrator.dt      = 0.1f;
-    state.sim.integrator.changed = true;
-
-    // Sim playback
-    state.sim.steps_per_second = 30;
+    sim_init();
 
     char *items[] = {"ParticleContainer", "SoAContainer", "LinkedCellContainer", "ParallelLCContainer"};
 
@@ -201,87 +181,7 @@ int main(int argc, char** argv) {
                 move_cam(&cam);
             }
 
-            if (state.sim.problem.changed) {
-                if (state.sim.cont) md_cont_destroy(state.sim.cont);
-                switch (state.sim.type) {
-                    case CONT_ParticleContainer: {
-                        state.sim.cont = md_get_aos_problem(
-                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
-                            state.sim.problem.vel,
-                            state.sim.problem.bounds_x.y, state.sim.problem.bounds_x.x, 
-                            state.sim.problem.bounds_y.y, state.sim.problem.bounds_y.x, 
-                            state.sim.problem.bounds_z.y, state.sim.problem.bounds_z.x
-                        );
-                    } break;
-
-                    case CONT_SoAContainer: {
-                        state.sim.cont = md_get_soa_problem(
-                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
-                            state.sim.problem.vel,
-                            state.sim.problem.bounds_x.y, state.sim.problem.bounds_x.x, 
-                            state.sim.problem.bounds_y.y, state.sim.problem.bounds_y.x, 
-                            state.sim.problem.bounds_z.y, state.sim.problem.bounds_z.x
-                        );
-                    } break;
-
-                    case CONT_LinkedCellContainer: {
-                        state.sim.cont = md_get_lc_problem(
-                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
-                            state.sim.problem.vel,
-                            state.sim.problem.bounds_x.x, state.sim.problem.bounds_y.x, state.sim.problem.bounds_z.x,
-                            10.0, 11, 11, 11
-                        );
-                    } break;
-
-                    case CONT_ParallelLCContainer: {
-                        state.sim.cont = md_get_plc_problem(
-                            state.sim.problem.n.x, state.sim.problem.n.y, state.sim.problem.n.z, 
-                            state.sim.problem.vel,
-                            state.sim.problem.bounds_x.x, state.sim.problem.bounds_y.x, state.sim.problem.bounds_z.x,
-                            10.0, 11, 11, 11
-                        );
-                    } break;
-                }
-                // init forces
-                md_ljforce_apply(state.sim.cont);
-
-                state.sim.geometry.changed = true;
-                state.sim.problem.changed = false;
-            }
-
-            if (state.sim.boundaries.changed) {
-                md_refl_bound_destroy(state.sim.x_boundary);
-                md_refl_bound_destroy(state.sim.y_boundary);
-                md_refl_bound_destroy(state.sim.z_boundary);
-                state.sim.x_boundary = md_refl_bound_create(state.sim.boundaries.x.x, state.sim.boundaries.x.y, 0);
-                state.sim.y_boundary = md_refl_bound_create(state.sim.boundaries.y.x, state.sim.boundaries.y.y, 1);
-                state.sim.z_boundary = md_refl_bound_create(state.sim.boundaries.z.x, state.sim.boundaries.z.y, 2);
-                state.sim.boundaries.changed = false;
-            }
-
-            if (state.sim.integrator.changed) {
-                md_vel_stoer_verlet_destroy(state.sim.vel_stoer_verlet);
-                state.sim.vel_stoer_verlet = md_vel_stoer_verlet_create(state.sim.integrator.dt);
-                state.sim.integrator.changed = false;
-            }
-
-            if (state.sim.geometry.changed) {
-                u32 n_particles = md_cont_size(state.sim.cont);
-                if (state.sim.geometry.n_particles != n_particles) {
-                    if (state.sim.geometry.data) free(state.sim.geometry.data);
-                    state.sim.geometry.data = ALLOC(Particle, n_particles);
-                    state.sim.geometry.n_particles = n_particles;
-                    alloc_vbo_data(n_particles);
-                }
-
-                md_cont_get_data(state.sim.cont, (f32 *)state.sim.geometry.data);
-                update_vbo_data();
-
-                state.sim.geometry.vel_bounds = get_vel_bounds();
-                // printf("%f\n", state.sim.geometry.vel_bounds.y);
-
-                state.sim.geometry.changed = false;
-            }
+            sim_check_for_param_changes();
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -334,7 +234,7 @@ int main(int argc, char** argv) {
 
                 nk_layout_row_dynamic(ctx, 25, 1);
 
-                nk_value_float(ctx, "Frame time:", state.time.frame_dt * 1000);
+                nk_value_float(ctx, "Frame time", state.time.frame_dt * 1000);
                 if (nk_property_float(ctx, "dt:", -10.0f, &state.sim.integrator.dt, 10.0f, 0.1f, 0.1f)) state.sim.integrator.changed = true;
                 nk_label(ctx, "Problem", NK_TEXT_LEFT);
                 if (nk_property_int(ctx, "x:", 0, &state.sim.problem.n.x, 1000, 1, 1)) state.sim.problem.changed = true;
