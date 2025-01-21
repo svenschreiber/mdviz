@@ -129,3 +129,22 @@ void sim_check_for_param_changes() {
         sim_update_geometry();
     }
 }
+
+void sim_step() {
+    md_vel_stoer_verlet_update_positions(state.sim.vel_stoer_verlet, state.sim.cont);
+
+    // apply boundaries
+    md_refl_bound_apply_cont(state.sim.x_boundary, state.sim.cont);
+    md_refl_bound_apply_cont(state.sim.y_boundary, state.sim.cont);
+    md_refl_bound_apply_cont(state.sim.z_boundary, state.sim.cont);
+
+    // flush forces
+    md_cont_flush_forces(state.sim.cont);
+
+    // compute new forces
+    md_ljforce_apply(state.sim.cont);
+
+    // update velocities
+    md_vel_stoer_verlet_update_velocities(state.sim.vel_stoer_verlet, state.sim.cont);
+}
+

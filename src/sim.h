@@ -8,5 +8,6 @@ void sim_update_integrator();
 vec2 sim_get_vel_bounds();
 void sim_update_geometry();
 void sim_check_for_param_changes();
+void sim_step();
 
 #endif // SIM_H

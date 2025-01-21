@@ -41,6 +41,7 @@ typedef struct {
 #include "time.h"
 #include "state.h"
 #include "sim.h"
+#include "ui.h"
 
 #include "string.c"
 #include "util.c"
@@ -52,6 +53,7 @@ typedef struct {
 #include "camera.c"
 #include "time.c"
 #include "sim.c"
+#include "ui.c"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -72,34 +74,6 @@ void register_window_callbacks(GLFWwindow* window) {
 
 Sim_Step *get_selected_step() {
     return &state.seq.steps[state.seq.selected];
-}
-
-vec2 get_vel_bounds() {
-    vec2 bounds = vec2(FLT_MAX, -FLT_MAX);
-    for (u32 i = 0; i < state.sim.geometry.n_particles; ++i) {
-        f32 v = state.sim.geometry.data[i].v;
-        if (v < bounds.x) bounds.x = v;
-        if (v > bounds.y) bounds.y = v;
-    }
-    return bounds;
-}
-
-void step_simulation() {
-    md_vel_stoer_verlet_update_positions(state.sim.vel_stoer_verlet, state.sim.cont);
-
-    // apply boundaries
-    md_refl_bound_apply_cont(state.sim.x_boundary, state.sim.cont);
-    md_refl_bound_apply_cont(state.sim.y_boundary, state.sim.cont);
-    md_refl_bound_apply_cont(state.sim.z_boundary, state.sim.cont);
-
-    // flush forces
-    md_cont_flush_forces(state.sim.cont);
-
-    // compute new forces
-    md_ljforce_apply(state.sim.cont);
-
-    // update velocities
-    md_vel_stoer_verlet_update_velocities(state.sim.vel_stoer_verlet, state.sim.cont);
 }
 
 int main(int argc, char** argv) {
@@ -164,7 +138,6 @@ int main(int argc, char** argv) {
 
     sim_init();
 
-    char *items[] = {"ParticleContainer", "SoAContainer", "LinkedCellContainer", "ParallelLCContainer"};
 
     while (!glfwWindowShouldClose(window)) {
         update_time();
@@ -196,53 +169,7 @@ int main(int argc, char** argv) {
             glEnableVertexAttribArray(1);
             glDrawArrays(GL_POINTS, 0, state.sim.geometry.n_particles);
 
-
-            if (nk_begin(ctx, "Controls", nk_rect(50, 50, 230, 350),
-                         NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
-                         NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
-            {
-
-                nk_layout_row_dynamic(ctx, 25, 1);
-                if (nk_combo_begin_label(ctx, items[state.sim.type], nk_vec2(nk_widget_width(ctx), 200))) {
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    for (int i = 0; i < 4; ++i)
-                        if (nk_combo_item_label(ctx, items[i], NK_TEXT_LEFT)) {
-                            state.sim.type = i;
-                            state.sim.problem.changed = true;
-                        }
-                    nk_combo_end(ctx);
-                }
-
-                nk_layout_row_static(ctx, 30, 80, 1);
-                if (!state.sim.playing) {
-                    if (nk_button_label(ctx, "Play")) {
-                        state.sim.playing = true;
-                        state.sim.timer = 0.0f;
-                    }
-                } else {
-                    if (nk_button_label(ctx, "Pause")) {
-                        state.sim.playing = false;
-                    }
-                }
-
-                f32 step_time = 1.0f / state.sim.steps_per_second;
-                if (state.sim.timer > step_time) {
-                    step_simulation();
-                    state.sim.geometry.changed = true;
-                    state.sim.timer = 0.0f;
-                }
-
-                nk_layout_row_dynamic(ctx, 25, 1);
-
-                nk_value_float(ctx, "Frame time", state.time.frame_dt * 1000);
-                if (nk_property_float(ctx, "dt:", -10.0f, &state.sim.integrator.dt, 10.0f, 0.1f, 0.1f)) state.sim.integrator.changed = true;
-                nk_label(ctx, "Problem", NK_TEXT_LEFT);
-                if (nk_property_int(ctx, "x:", 0, &state.sim.problem.n.x, 1000, 1, 1)) state.sim.problem.changed = true;
-                if (nk_property_int(ctx, "y:", 0, &state.sim.problem.n.y, 1000, 1, 1)) state.sim.problem.changed = true;
-                if (nk_property_int(ctx, "z:", 0, &state.sim.problem.n.z, 1000, 1, 1)) state.sim.problem.changed = true;
-            }
-            nk_end(ctx);
-
+            ui_update();
             nk_glfw3_render(glfw, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
 
             glfwSwapBuffers(window);
