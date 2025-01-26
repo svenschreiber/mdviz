@@ -24,6 +24,6 @@ void main()
     }
     // alpha = smoothstep(vel_bounds.x, vel_bounds.y, v_vel);
     // f_col = mix(vec4(0.0, 0.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), alpha);
-    gl_PointSize = 5.0 * alpha + 2.0;
+    gl_PointSize = 5.0 * alpha + 4.0;
     gl_Position = projection * view * vec4(v_pos, 1.0);
 }
