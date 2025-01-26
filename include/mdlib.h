@@ -1,3 +1,12 @@
+// The mdlib.h and mdlib.cpp files provide a small C-Interface to the mdlib.
+// Not every method of the mdlib is also present in the C library, because
+// I implemented them as I needed them.
+// Also: This interface abstracts over different container types, as I wanted
+// to make it possible to seamlessly switch between them without much code
+// overhead. But unifying all of the different container methods sometimes 
+// defeats the purpose of having different methods/datastructures (for 
+// performance) in the first place. Because of that the interface only contains
+// the essential methods that are implements by each container type.
 #include <stddef.h>
 
 #ifdef __cplusplus
