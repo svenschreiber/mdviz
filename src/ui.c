@@ -1,3 +1,4 @@
+// Describes and updates the UI
 void ui_update() {
     struct nk_context *ctx = state.window.nk_ctx;
 
@@ -6,6 +7,7 @@ void ui_update() {
                  NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
                  NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE)) {
 
+        // ParticleContainer selector
         nk_layout_row_dynamic(ctx, 25, 1);
         if (nk_combo_begin_label(ctx, items[state.sim.type], nk_vec2(nk_widget_width(ctx), 200))) {
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -17,6 +19,7 @@ void ui_update() {
             nk_combo_end(ctx);
         }
 
+        // Play button
         nk_layout_row_static(ctx, 30, 80, 1);
         if (!state.sim.playing) {
             if (nk_button_label(ctx, "Play")) {
@@ -29,17 +32,14 @@ void ui_update() {
             }
         }
 
-        f32 step_time = 1.0f / state.sim.steps_per_second;
-        if (state.sim.timer > step_time) {
-            sim_step();
-            state.sim.geometry.changed = true;
-            state.sim.timer = 0.0f;
-        }
-
         nk_layout_row_dynamic(ctx, 25, 1);
-
+        // Frame time label
         nk_value_float(ctx, "Frame time", state.time.frame_dt * 1000);
+
+        // Time step length field
         if (nk_property_float(ctx, "dt:", -10.0f, &state.sim.integrator.dt, 10.0f, 0.1f, 0.1f)) state.sim.integrator.changed = true;
+
+        // Problem size specification
         nk_label(ctx, "Problem", NK_TEXT_LEFT);
         if (nk_property_int(ctx, "x:", 0, &state.sim.problem.n.x, 1000, 1, 1)) state.sim.problem.changed = true;
         if (nk_property_int(ctx, "y:", 0, &state.sim.problem.n.y, 1000, 1, 1)) state.sim.problem.changed = true;

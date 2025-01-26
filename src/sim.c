@@ -23,6 +23,7 @@ void sim_init() {
     state.sim.steps_per_second = 30;
 }
 
+// Constructs a new Problem/Container if the container type changed
 void sim_update_problem() {
     if (state.sim.cont) md_cont_destroy(state.sim.cont);
 
@@ -69,6 +70,7 @@ void sim_update_problem() {
     state.sim.problem.changed = false;
 }
 
+// Constructs new boundary objects
 void sim_update_boundaries() {
     if (state.sim.x_boundary) md_refl_bound_destroy(state.sim.x_boundary);
     if (state.sim.y_boundary) md_refl_bound_destroy(state.sim.y_boundary);
@@ -79,12 +81,14 @@ void sim_update_boundaries() {
     state.sim.boundaries.changed = false;
 }
 
+// Constructs a new velocity stoermer verlet integrator
 void sim_update_integrator() {
     md_vel_stoer_verlet_destroy(state.sim.vel_stoer_verlet);
     state.sim.vel_stoer_verlet = md_vel_stoer_verlet_create(state.sim.integrator.dt);
     state.sim.integrator.changed = false;
 }
 
+// Determines the min and max velocity values of all particles
 vec2 sim_get_vel_bounds() {
     vec2 bounds = vec2(FLT_MAX, -FLT_MAX);
     for (u32 i = 0; i < state.sim.geometry.n_particles; ++i) {
@@ -95,7 +99,7 @@ vec2 sim_get_vel_bounds() {
     return bounds;
 }
 
-
+// Allocates VBO data buffer and sends the particle geometry to GPU
 void sim_update_geometry() {
     u32 n_particles = md_cont_size(state.sim.cont);
     if (state.sim.geometry.n_particles != n_particles) {
@@ -110,6 +114,7 @@ void sim_update_geometry() {
     state.sim.geometry.changed = false;
 }
 
+// Updates any simulation components if it was changed (e.g. through the UI)
 void sim_check_for_param_changes() {
     if (state.sim.problem.changed) {
         sim_update_problem();
@@ -130,6 +135,7 @@ void sim_check_for_param_changes() {
     }
 }
 
+// Make a simulation step
 void sim_step() {
     md_vel_stoer_verlet_update_positions(state.sim.vel_stoer_verlet, state.sim.cont);
 

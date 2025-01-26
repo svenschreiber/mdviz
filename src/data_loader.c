@@ -3,6 +3,7 @@ void update_velocity_bounds(Sim_Step *step, f32 v) {
     if (v > step->bounds.y) step->bounds.y = v;
 }
 
+// Load a simulation sequence from csv
 Sim_Sequence load_sim_sequence(String csv) {
     // preprocessing
     csv = str_trim(csv);

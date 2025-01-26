@@ -1,6 +1,8 @@
 #ifndef STATE_H
 #define STATE_H
 
+// Global state struct inspired from raylib. Makes it very pleasant to work with the
+// application state, instead of passing pointers to every function in the code.
 typedef struct State {
     struct {
         struct {
@@ -79,8 +81,6 @@ typedef struct State {
     } sim;
 
     GLuint shader;
-    Sim_Sequence seq;
-    Sim_Geometry geom;
 } State;
 
 State state = {0};
