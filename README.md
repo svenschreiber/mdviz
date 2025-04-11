@@ -1,6 +1,6 @@
 # MD Simulation Visualizer
 
-This repository contains a basic visualizer software for the molecular dynamics (MD) simulation we wrote in the 'High Performance Scientific Computing' course 2024/25 at the University of Hamburg.
+This repository contains a basic visualization software for the molecular dynamics (MD) simulation we wrote in the 'High Performance Scientific Computing' course 2024/25 at the University of Hamburg.
 
 ## Overview
 ![image](media/screenshot.png)
